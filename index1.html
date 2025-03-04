@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+<head>
+    <meta charset="UTF-8">
+    <title>ESP32 LED 控制面板</title>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+</head>
+<body>
+    <h1>ESP32 LED 控制面板</h1>
+    <button onclick="sendMessage('1')">LED ON</button>
+    <button onclick="sendMessage('0')">LED OFF</button>
+    <button onclick="sendMessage('Hi')">發送 Hi</button>
+    <div id="status"></div>
+
+    <script>
+        // 初始化 MQTT 連接
+        const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt', {
+            clientId: 'web_client_1',
+            username: 'mqttx_ce657d5d',
+            password: ''
+        });
+
+        client.on('connect', () => {
+            console.log('✅ 已連接到 MQTT Broker');
+            document.getElementById('status').innerHTML = '✅ 已連接到 MQTT Broker';
+            client.subscribe('home/yard/ESP32', { qos: 1 });
+        });
+
+        client.on('message', (topic, message) => {
+            console.log('📥 收到訊息:', message.toString());
+            document.getElementById('status').innerHTML = '📥 收到訊息: ' + message.toString();
+        });
+
+        client.on('error', (error) => {
+            console.error('❌ 連接錯誤:', error);
+            document.getElementById('status').innerHTML = '❌ 連接錯誤: ' + error;
+        });
+
+        function sendMessage(msg) {
+            const payload = JSON.stringify({
+                msg: msg,
+                sender: 'web_client_1'
+            });
+            client.publish('home/yard/ESP32', payload, { qos: 1 });
+            console.log('🚀 已發送訊息:', payload);
+            document.getElementById('status').innerHTML = '🚀 已發送訊息: ' + payload;
+        }
+    </script>
+</body>
+</html>
